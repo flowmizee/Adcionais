@@ -40,7 +40,6 @@
       background-color: #333;
       color: white;
     }
-    /* Removemos a largura fixa para os selects dentro de .item-row, pois os agruparemos */
     .item-row {
       display: flex;
       flex-wrap: wrap;
@@ -49,22 +48,8 @@
       border: 1px solid #444;
       margin-bottom: 10px;
     }
-    /* Container para agrupar os selects */
-    .selects-container {
-      display: flex;
-      gap: 10px;
-      width: 100%;
-    }
-    /* O select de produto ocupará 70% e o de quantidade 30% (ajuste conforme necessário) */
-    .selects-container select:first-child {
-      flex: 7;
-    }
-    .selects-container select:last-child {
-      flex: 3;
-    }
-    /* Para os demais elementos da linha, podemos manter o estilo */
-    .item-row input,
-    .item-row button {
+    .item-row select, .item-row input {
+      width: 32%;
       background-color: #000;
     }
     .add-item {
@@ -94,7 +79,7 @@
       background-color: #000;
     }
     .item-row button {
-      width: 100%;
+      width: 32%;
       padding: 8px 15px;
       font-size: 14px;
     }
@@ -149,12 +134,12 @@
       margin: 0 0 5px 0;
       font-weight: bold;
     }
-    /* Estilo para a descrição do produto */
+    /* Estilo para a descrição do produto (não enviada no WhatsApp) */
     .descricao-produto {
       width: 100%;
       margin-bottom: 10px;
       color: #ccc;
-      font-size: 0.9em;
+      font-size: 0.8em; /* Fonte menor para melhor visual */
       font-style: italic;
     }
   </style>
@@ -261,17 +246,15 @@
       const novoItem = document.createElement("div");
       novoItem.className = "item-row";
       novoItem.innerHTML = `
-        <div class="selects-container">
-          <select onchange="produtoSelecionado(this)">
-            <option value="">Selecione o produto</option>
-            ${Object.keys(produtos)
-              .map(produto => `<option value="${produto}">${produtos[produto].emoji} ${produto} - R$ ${produtos[produto].preco.toFixed(2)}</option>`)
-              .join('')}
-          </select>
-          <select onchange="atualizarPrecoTotal(this)">
-            ${[...Array(10)].map((_, i) => `<option value="${i + 1}">Quantidade: ${i + 1}</option>`).join('')}
-          </select>
-        </div>
+        <select onchange="produtoSelecionado(this)">
+          <option value="">Selecione o produto</option>
+          ${Object.keys(produtos)
+            .map(produto => `<option value="${produto}">${produtos[produto].emoji} ${produto} - R$ ${produtos[produto].preco.toFixed(2)}</option>`)
+            .join('')}
+        </select>
+        <select onchange="atualizarPrecoTotal(this)">
+          ${[...Array(10)].map((_, i) => `<option value="${i + 1}">Quantidade: ${i + 1}</option>`).join('')}
+        </select>
         <input type="number" placeholder="Preço Total (R$)" step="0.01" readonly>
         <button onclick="removerItem(this)">Remover</button>
         <!-- Container para a descrição do produto (não será enviada no WhatsApp) -->
@@ -322,7 +305,7 @@
     function atualizarPrecoTotal(element) {
       const itemRow = element.closest('.item-row');
       const produtoSelect = itemRow.querySelector('select:first-child');
-      const quantidadeSelect = itemRow.querySelector('.selects-container select:last-child');
+      const quantidadeSelect = itemRow.querySelector('select:nth-of-type(2)');
       const produto = produtoSelect ? produtoSelect.value : "";
       const quantidade = quantidadeSelect ? parseInt(quantidadeSelect.value) : 0;
       if (produto && quantidade) {
@@ -379,7 +362,7 @@
           temProdutoVazio = true;
           break;
         }
-        const quantidade = itemRow.querySelector('.selects-container select:last-child').value;
+        const quantidade = itemRow.querySelector('select:nth-of-type(2)').value;
         const precoTotal = itemRow.querySelector('input[readonly]').value;
         // Monta a linha principal do item (a descrição do produto não é incluída)
         let itemText = `${produtos[produtoSelecionado].emoji} ${produtoSelecionado} x${quantidade} - R$ ${precoTotal}\n`;
@@ -510,4 +493,4 @@
     });
   </script>
 </body>
-  </html>
+</html>
