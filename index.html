@@ -22,7 +22,7 @@
       padding: 20px;
       background-color: #000;
       border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
       color: white;
     }
     label {
@@ -168,20 +168,19 @@
           // Divide a linha em colunas (utilize um parser CSV se necessário)
           const colunas = linha.split(",").map(coluna => coluna.trim());
 
-          /* 
-            Estrutura da planilha (9 colunas):
-            0: Produto
-            1: Preço
-            2: Descrição
-            3: Adicional 1
-            4: Preço Adicional 1
-            5: Adicional 2
-            6: Preço Adicional 2
-            7: Adicional 3
-            8: Preço Adicional 3
+          /* Estrutura da planilha (9 colunas):
+             0: Produto
+             1: Preço
+             2: Descrição
+             3: Adicional 1
+             4: Preço Adicional 1
+             5: Adicional 2
+             6: Preço Adicional 2
+             7: Adicional 3
+             8: Preço Adicional 3
           */
           const nome = colunas[0];
-          const preco = parseFloat(colunas[1].replace(",", "."));
+          const preco = parseFloat(colunas[1].replace(",", ".")) || 0;
           const descricao = colunas[2];
 
           // Cria um array para os adicionais deste produto
@@ -189,19 +188,19 @@
           if (colunas[3] && colunas[4]) {
             adicionais.push({
               nome: colunas[3],
-              preco: parseFloat(colunas[4].replace(",", "."))
+              preco: parseFloat(colunas[4].replace(",", ".")) || 0
             });
           }
           if (colunas[5] && colunas[6]) {
             adicionais.push({
               nome: colunas[5],
-              preco: parseFloat(colunas[6].replace(",", "."))
+              preco: parseFloat(colunas[6].replace(",", ".")) || 0
             });
           }
           if (colunas[7] && colunas[8]) {
             adicionais.push({
               nome: colunas[7],
-              preco: parseFloat(colunas[8].replace(",", "."))
+              preco: parseFloat(colunas[8].replace(",", ".")) || 0
             });
           }
 
@@ -305,28 +304,30 @@
       }
     }
 
-    // Atualiza o preço total do item (base + adicionais * quantidade)
+    // Atualiza o preço total do item.
+    // O cálculo agora será: (preço base * quantidade) + soma dos adicionais (apenas uma vez, não multiplicado pela quantidade)
     function atualizarPrecoTotal(element) {
       const itemRow = element.closest('.item-row');
       const produtoSelect = itemRow.querySelector('select:first-child');
       const quantidadeSelect = itemRow.querySelector('select:nth-of-type(2)');
       const produto = produtoSelect ? produtoSelect.value : "";
-      const quantidade = quantidadeSelect ? parseInt(quantidadeSelect.value) : 0;
-      if (produto && quantidade) {
-        let basePrice = produtos[produto].preco;
+      // Se quantidade não for válida, usamos 1 como padrão
+      const quantidade = quantidadeSelect ? (parseInt(quantidadeSelect.value) || 1) : 1;
+      if (produto) {
+        let basePrice = Number(produtos[produto].preco) || 0;
         let extrasSum = 0;
         const checkboxes = itemRow.querySelectorAll('.extras-container input[type="checkbox"]');
         checkboxes.forEach(cb => {
           if (cb.checked) {
-            extrasSum += parseFloat(cb.getAttribute('data-extra-preco'));
+            extrasSum += Number(cb.getAttribute('data-extra-preco')) || 0;
           }
         });
-        const unitPrice = basePrice + extrasSum;
-        const precoTotal = (unitPrice * quantidade).toFixed(2);
-        itemRow.querySelector('input').value = precoTotal;
+        // O total do item será: (preço base * quantidade) + adicionais (soma única)
+        const totalPrice = (basePrice * quantidade) + extrasSum;
+        itemRow.querySelector('input[readonly]').value = totalPrice.toFixed(2);
         calcularTotal();
       } else {
-        itemRow.querySelector('input').value = '';
+        itemRow.querySelector('input[readonly]').value = "";
         calcularTotal();
       }
     }
@@ -376,7 +377,7 @@
         checkboxes.forEach(cb => {
           if (cb.checked) {
             const nomeExtra = cb.getAttribute('data-extra-nome');
-            const precoExtra = parseFloat(cb.getAttribute('data-extra-preco')).toFixed(2);
+            const precoExtra = Number(cb.getAttribute('data-extra-preco')).toFixed(2);
             itemText += `   + ${nomeExtra} (R$ ${precoExtra})\n`;
           }
         });
@@ -454,7 +455,7 @@
     <!-- Mensagem de status -->
   </div>
   <form onsubmit="event.preventDefault(); enviarPedido();">
-    <h1>PEDIDO 🍕🍔🥤🍟</h1>
+    <h1>PEDIDO</h1>
     <label for="nome">Nome do Cliente:</label>
     <input type="text" id="nome" name="nome" placeholder="Digite seu nome" required>
     <label for="endereco">Endereço de Entrega:</label>
