@@ -40,6 +40,7 @@
       background-color: #333;
       color: white;
     }
+    /* Removemos a largura fixa para os selects dentro de .item-row, pois os agruparemos */
     .item-row {
       display: flex;
       flex-wrap: wrap;
@@ -48,8 +49,22 @@
       border: 1px solid #444;
       margin-bottom: 10px;
     }
-    .item-row select, .item-row input {
-      width: 32%;
+    /* Container para agrupar os selects */
+    .selects-container {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+    }
+    /* O select de produto ocupará 70% e o de quantidade 30% (ajuste conforme necessário) */
+    .selects-container select:first-child {
+      flex: 7;
+    }
+    .selects-container select:last-child {
+      flex: 3;
+    }
+    /* Para os demais elementos da linha, podemos manter o estilo */
+    .item-row input,
+    .item-row button {
       background-color: #000;
     }
     .add-item {
@@ -79,7 +94,7 @@
       background-color: #000;
     }
     .item-row button {
-      width: 32%;
+      width: 100%;
       padding: 8px 15px;
       font-size: 14px;
     }
@@ -134,6 +149,14 @@
       margin: 0 0 5px 0;
       font-weight: bold;
     }
+    /* Estilo para a descrição do produto */
+    .descricao-produto {
+      width: 100%;
+      margin-bottom: 10px;
+      color: #ccc;
+      font-size: 0.9em;
+      font-style: italic;
+    }
   </style>
   <script>
     // Opção de entrega ou retirada (padrão: entrega)
@@ -142,7 +165,7 @@
     // Objeto para armazenar os produtos carregados da planilha
     const produtos = {};
 
-    // Função para carregar os produtos (incluindo adicionais) da planilha do Google Sheets (CSV)
+    // Função para carregar os produtos (incluindo descrição e adicionais) da planilha do Google Sheets (CSV)
     async function carregarProdutosDaPlanilha() {
       const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGudIAhY04w2oPsRfM4bckCWCqPn7triE4M2f4BsdLcSqYeVwJJMv8IEwgCh33l29fH5JVuoa9pllZ/pub?output=csv";
       try {
@@ -157,40 +180,44 @@
         }
 
         linhas.forEach(linha => {
-          // Divide a linha em colunas (certifique-se de que os dados não tenham vírgulas internas ou utilize um parser CSV se necessário)
+          // Divide a linha em colunas (use um parser CSV se os dados contiverem vírgulas internas)
           const colunas = linha.split(",").map(coluna => coluna.trim());
 
+          // Nova estrutura:
+          // 0: Produto, 1: Preço, 2: Emoji, 3: Descrição,
+          // 4: Adicional 1, 5: Preço Adicional 1, 6: Adicional 2, 7: Preço Adicional 2, 8: Adicional 3, 9: Preço Adicional 3
           const nome = colunas[0];
           const preco = parseFloat(colunas[1].replace(",", "."));
           const emoji = colunas[2];
+          const descricao = colunas[3]; // nova coluna de descrição
 
           // Cria um array para os adicionais deste produto
           const adicionais = [];
 
-          // Adicional 1 (colunas 3 e 4)
-          if (colunas[3] && colunas[4]) {
+          // Adicional 1 (colunas 4 e 5)
+          if (colunas[4] && colunas[5]) {
             adicionais.push({
-              nome: colunas[3],
-              preco: parseFloat(colunas[4].replace(",", "."))
+              nome: colunas[4],
+              preco: parseFloat(colunas[5].replace(",", "."))
             });
           }
-          // Adicional 2 (colunas 5 e 6)
-          if (colunas[5] && colunas[6]) {
+          // Adicional 2 (colunas 6 e 7)
+          if (colunas[6] && colunas[7]) {
             adicionais.push({
-              nome: colunas[5],
-              preco: parseFloat(colunas[6].replace(",", "."))
+              nome: colunas[6],
+              preco: parseFloat(colunas[7].replace(",", "."))
             });
           }
-          // Adicional 3 (colunas 7 e 8)
-          if (colunas[7] && colunas[8]) {
+          // Adicional 3 (colunas 8 e 9)
+          if (colunas[8] && colunas[9]) {
             adicionais.push({
-              nome: colunas[7],
-              preco: parseFloat(colunas[8].replace(",", "."))
+              nome: colunas[8],
+              preco: parseFloat(colunas[9].replace(",", "."))
             });
           }
 
-          // Armazena os dados do produto, incluindo os adicionais
-          produtos[nome] = { preco, emoji, adicionais };
+          // Armazena os dados do produto, incluindo descrição e adicionais
+          produtos[nome] = { preco, emoji, descricao, adicionais };
         });
         console.log("Produtos carregados:", produtos);
         atualizarSelectProdutos();
@@ -234,29 +261,44 @@
       const novoItem = document.createElement("div");
       novoItem.className = "item-row";
       novoItem.innerHTML = `
-        <select onchange="produtoSelecionado(this)">
-          <option value="">Selecione o produto</option>
-          ${Object.keys(produtos)
-            .map(produto => `<option value="${produto}">${produtos[produto].emoji} ${produto} - R$ ${produtos[produto].preco.toFixed(2)}</option>`)
-            .join('')}
-        </select>
-        <select onchange="atualizarPrecoTotal(this)">
-          ${[...Array(10)].map((_, i) => `<option value="${i + 1}">Quantidade: ${i + 1}</option>`).join('')}
-        </select>
+        <div class="selects-container">
+          <select onchange="produtoSelecionado(this)">
+            <option value="">Selecione o produto</option>
+            ${Object.keys(produtos)
+              .map(produto => `<option value="${produto}">${produtos[produto].emoji} ${produto} - R$ ${produtos[produto].preco.toFixed(2)}</option>`)
+              .join('')}
+          </select>
+          <select onchange="atualizarPrecoTotal(this)">
+            ${[...Array(10)].map((_, i) => `<option value="${i + 1}">Quantidade: ${i + 1}</option>`).join('')}
+          </select>
+        </div>
         <input type="number" placeholder="Preço Total (R$)" step="0.01" readonly>
         <button onclick="removerItem(this)">Remover</button>
+        <!-- Container para a descrição do produto (não será enviada no WhatsApp) -->
+        <div class="descricao-produto"></div>
         <div class="extras-container"></div>
       `;
       itensContainer.appendChild(novoItem);
       atualizarSelectProdutos();
     }
 
-    // Função chamada ao selecionar um produto (para renderizar os adicionais, se houver)
+    // Função chamada ao selecionar um produto (para renderizar a descrição e os adicionais, se houver)
     function produtoSelecionado(selectElement) {
       const itemRow = selectElement.closest('.item-row');
       const produto = selectElement.value;
+      renderDescricaoForRow(itemRow, produto);
       renderExtrasForRow(itemRow, produto);
       atualizarPrecoTotal(selectElement);
+    }
+
+    // Renderiza a descrição do produto na área designada (não enviada no WhatsApp)
+    function renderDescricaoForRow(itemRow, produto) {
+      const descricaoContainer = itemRow.querySelector('.descricao-produto');
+      if (produto && produtos[produto] && produtos[produto].descricao) {
+        descricaoContainer.innerText = produtos[produto].descricao;
+      } else {
+        descricaoContainer.innerText = "";
+      }
     }
 
     // Renderiza os adicionais para o item, caso o produto possua adicionais
@@ -280,7 +322,7 @@
     function atualizarPrecoTotal(element) {
       const itemRow = element.closest('.item-row');
       const produtoSelect = itemRow.querySelector('select:first-child');
-      const quantidadeSelect = itemRow.querySelector('select:nth-of-type(2)');
+      const quantidadeSelect = itemRow.querySelector('.selects-container select:last-child');
       const produto = produtoSelect ? produtoSelect.value : "";
       const quantidade = quantidadeSelect ? parseInt(quantidadeSelect.value) : 0;
       if (produto && quantidade) {
@@ -337,11 +379,11 @@
           temProdutoVazio = true;
           break;
         }
-        const quantidade = itemRow.querySelector('select:nth-of-type(2)').value;
+        const quantidade = itemRow.querySelector('.selects-container select:last-child').value;
         const precoTotal = itemRow.querySelector('input[readonly]').value;
-        // Monta a linha principal do item
+        // Monta a linha principal do item (a descrição do produto não é incluída)
         let itemText = `${produtos[produtoSelecionado].emoji} ${produtoSelecionado} x${quantidade} - R$ ${precoTotal}\n`;
-        // Verifica se há adicionais selecionados e adiciona os detalhes
+        // Adiciona os adicionais selecionados
         const extrasContainer = itemRow.querySelector('.extras-container');
         const checkboxes = extrasContainer.querySelectorAll('input[type="checkbox"]');
         checkboxes.forEach(cb => {
@@ -468,4 +510,4 @@
     });
   </script>
 </body>
-</html>
+  </html>
