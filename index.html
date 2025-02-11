@@ -257,7 +257,7 @@
         </select>
         <input type="number" placeholder="Preço Total (R$)" step="0.01" readonly>
         <button onclick="removerItem(this)">Remover</button>
-        <!-- Container para a descrição do produto (não será enviada no WhatsApp) -->
+        <!-- Container para a descrição do produto (exibida na interface, mas NÃO incluída no WhatsApp) -->
         <div class="descricao-produto"></div>
         <div class="extras-container"></div>
       `;
@@ -274,7 +274,7 @@
       atualizarPrecoTotal(selectElement);
     }
 
-    // Renderiza a descrição do produto na área designada (não enviada no WhatsApp)
+    // Renderiza a descrição do produto na área designada (apenas exibida na interface)
     function renderDescricaoForRow(itemRow, produto) {
       const descricaoContainer = itemRow.querySelector('.descricao-produto');
       if (produto && produtos[produto] && produtos[produto].descricao) {
@@ -341,7 +341,7 @@
       document.getElementById("total").value = totalPedido.toFixed(2);
     }
 
-    // Envia o pedido via WhatsApp com a mensagem formatada
+    // Envia o pedido via WhatsApp com a mensagem formatada (a descrição NÃO é incluída)
     function enviarPedido() {
       const nome = document.getElementById("nome").value;
       const endereco = document.getElementById("endereco").value;
@@ -364,7 +364,7 @@
         }
         const quantidade = itemRow.querySelector('select:nth-of-type(2)').value;
         const precoTotal = itemRow.querySelector('input[readonly]').value;
-        // Monta a linha principal do item (a descrição do produto não é incluída)
+        // Monta a linha principal do item (a descrição do produto NÃO é incluída na mensagem)
         let itemText = `${produtos[produtoSelecionado].emoji} ${produtoSelecionado} x${quantidade} - R$ ${precoTotal}\n`;
         // Adiciona os adicionais selecionados
         const extrasContainer = itemRow.querySelector('.extras-container');
@@ -493,4 +493,4 @@
     });
   </script>
 </body>
-</html>
+      </html>
