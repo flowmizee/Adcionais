@@ -266,7 +266,7 @@
         let html = `<p>Adicionais:</p>`;
         produtos[produto].adicionais.forEach(extra => {
           html += `<label style="margin-right:10px;">
-                    <input type="checkbox" data-extra-preco="${extra.preco}" onchange="atualizarPrecoTotal(this)">
+                    <input type="checkbox" data-extra-preco="${extra.preco}" data-extra-nome="${extra.nome}" onchange="atualizarPrecoTotal(this)">
                     ${extra.nome} (R$ ${extra.preco.toFixed(2)})
                    </label>`;
         });
@@ -279,8 +279,8 @@
     // Atualiza o preço total do item (base + adicionais * quantidade)
     function atualizarPrecoTotal(element) {
       const itemRow = element.closest('.item-row');
-      const produtoSelect = itemRow.querySelector('select:nth-child(1)');
-      const quantidadeSelect = itemRow.querySelector('select:nth-child(2)');
+      const produtoSelect = itemRow.querySelector('select:first-child');
+      const quantidadeSelect = itemRow.querySelector('select:nth-of-type(2)');
       const produto = produtoSelect ? produtoSelect.value : "";
       const quantidade = quantidadeSelect ? parseInt(quantidadeSelect.value) : 0;
       if (produto && quantidade) {
@@ -307,8 +307,8 @@
       const itensContainer = document.getElementById("itens-container").children;
       let total = 0;
       for (let i = 0; i < itensContainer.length; i++) {
-        const item = itensContainer[i].children;
-        const precoTotal = parseFloat(item[2].value) || 0;
+        const itemRow = itensContainer[i];
+        const precoTotal = parseFloat(itemRow.querySelector('input[readonly]').value) || 0;
         total += precoTotal;
       }
       const taxaEntrega = opcaoEntrega === "retirada" ? 0 : parseFloat(document.getElementById("taxa").value) || 0;
@@ -331,15 +331,27 @@
       let temProdutoVazio = false;
 
       for (let i = 0; i < itensContainer.length; i++) {
-        const item = itensContainer[i].children;
-        const produtoSelecionado = item[0].value;
+        const itemRow = itensContainer[i];
+        const produtoSelecionado = itemRow.querySelector('select:first-child').value;
         if (produtoSelecionado === "") {
           temProdutoVazio = true;
           break;
         }
-        const quantidade = item[1].value;
-        const precoTotal = item[2].value;
-        itens += `${produtos[produtoSelecionado].emoji} ${produtoSelecionado} x${quantidade} - R$ ${precoTotal}\n`;
+        const quantidade = itemRow.querySelector('select:nth-of-type(2)').value;
+        const precoTotal = itemRow.querySelector('input[readonly]').value;
+        // Monta a linha principal do item
+        let itemText = `${produtos[produtoSelecionado].emoji} ${produtoSelecionado} x${quantidade} - R$ ${precoTotal}\n`;
+        // Verifica se há adicionais selecionados e adiciona os detalhes
+        const extrasContainer = itemRow.querySelector('.extras-container');
+        const checkboxes = extrasContainer.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(cb => {
+          if (cb.checked) {
+            const nomeExtra = cb.getAttribute('data-extra-nome');
+            const precoExtra = parseFloat(cb.getAttribute('data-extra-preco')).toFixed(2);
+            itemText += `   + ${nomeExtra} (R$ ${precoExtra})\n`;
+          }
+        });
+        itens += itemText;
       }
 
       if (temProdutoVazio) {
@@ -456,4 +468,4 @@
     });
   </script>
 </body>
-</html>
+      </html>
