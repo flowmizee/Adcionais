@@ -134,7 +134,7 @@
       margin: 0 0 5px 0;
       font-weight: bold;
     }
-    /* Estilo para a descrição do produto */
+    /* Estilo para a descrição do produto (exibida na interface, mas não enviada no WhatsApp) */
     .descricao-produto {
       width: 100%;
       margin-bottom: 10px;
@@ -165,44 +165,48 @@
         }
 
         linhas.forEach(linha => {
-          // Divide a linha em colunas (use um parser CSV se os dados contiverem vírgulas internas)
+          // Divide a linha em colunas (utilize um parser CSV se necessário)
           const colunas = linha.split(",").map(coluna => coluna.trim());
 
-          // Nova estrutura:
-          // 0: Produto, 1: Preço, 2: Emoji, 3: Descrição,
-          // 4: Adicional 1, 5: Preço Adicional 1, 6: Adicional 2, 7: Preço Adicional 2, 8: Adicional 3, 9: Preço Adicional 3
+          /* 
+            Estrutura da planilha (9 colunas):
+            0: Produto
+            1: Preço
+            2: Descrição
+            3: Adicional 1
+            4: Preço Adicional 1
+            5: Adicional 2
+            6: Preço Adicional 2
+            7: Adicional 3
+            8: Preço Adicional 3
+          */
           const nome = colunas[0];
           const preco = parseFloat(colunas[1].replace(",", "."));
-          const emoji = colunas[2];
-          const descricao = colunas[3]; // nova coluna de descrição
+          const descricao = colunas[2];
 
           // Cria um array para os adicionais deste produto
           const adicionais = [];
-
-          // Adicional 1 (colunas 4 e 5)
-          if (colunas[4] && colunas[5]) {
+          if (colunas[3] && colunas[4]) {
             adicionais.push({
-              nome: colunas[4],
-              preco: parseFloat(colunas[5].replace(",", "."))
+              nome: colunas[3],
+              preco: parseFloat(colunas[4].replace(",", "."))
             });
           }
-          // Adicional 2 (colunas 6 e 7)
-          if (colunas[6] && colunas[7]) {
+          if (colunas[5] && colunas[6]) {
             adicionais.push({
-              nome: colunas[6],
-              preco: parseFloat(colunas[7].replace(",", "."))
+              nome: colunas[5],
+              preco: parseFloat(colunas[6].replace(",", "."))
             });
           }
-          // Adicional 3 (colunas 8 e 9)
-          if (colunas[8] && colunas[9]) {
+          if (colunas[7] && colunas[8]) {
             adicionais.push({
-              nome: colunas[8],
-              preco: parseFloat(colunas[9].replace(",", "."))
+              nome: colunas[7],
+              preco: parseFloat(colunas[8].replace(",", "."))
             });
           }
 
           // Armazena os dados do produto, incluindo descrição e adicionais
-          produtos[nome] = { preco, emoji, descricao, adicionais };
+          produtos[nome] = { preco, descricao, adicionais };
         });
         console.log("Produtos carregados:", produtos);
         atualizarSelectProdutos();
@@ -218,7 +222,7 @@
         const currentValue = select.value;
         let optionsHTML = `<option value="">Selecione o produto</option>`;
         optionsHTML += Object.keys(produtos)
-          .map(produto => `<option value="${produto}">${produtos[produto].emoji} ${produto} - R$ ${produtos[produto].preco.toFixed(2)}</option>`)
+          .map(produto => `<option value="${produto}">${produto} - R$ ${produtos[produto].preco.toFixed(2)}</option>`)
           .join('');
         select.innerHTML = optionsHTML;
         if (currentValue && optionsHTML.indexOf(`value="${currentValue}"`) !== -1) {
@@ -249,7 +253,7 @@
         <select onchange="produtoSelecionado(this)">
           <option value="">Selecione o produto</option>
           ${Object.keys(produtos)
-            .map(produto => `<option value="${produto}">${produtos[produto].emoji} ${produto} - R$ ${produtos[produto].preco.toFixed(2)}</option>`)
+            .map(produto => `<option value="${produto}">${produto} - R$ ${produtos[produto].preco.toFixed(2)}</option>`)
             .join('')}
         </select>
         <select onchange="atualizarPrecoTotal(this)">
@@ -364,8 +368,8 @@
         }
         const quantidade = itemRow.querySelector('select:nth-of-type(2)').value;
         const precoTotal = itemRow.querySelector('input[readonly]').value;
-        // Monta a linha principal do item (a descrição do produto NÃO é incluída na mensagem)
-        let itemText = `${produtos[produtoSelecionado].emoji} ${produtoSelecionado} x${quantidade} - R$ ${precoTotal}\n`;
+        // Monta a linha principal do item (a descrição NÃO é incluída)
+        let itemText = `${produtoSelecionado} x${quantidade} - R$ ${precoTotal}\n`;
         // Adiciona os adicionais selecionados
         const extrasContainer = itemRow.querySelector('.extras-container');
         const checkboxes = extrasContainer.querySelectorAll('input[type="checkbox"]');
@@ -493,4 +497,4 @@
     });
   </script>
 </body>
-      </html>
+</html>
