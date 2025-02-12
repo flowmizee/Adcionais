@@ -134,13 +134,15 @@
       margin: 0 0 5px 0;
       font-weight: bold;
     }
-    /* Estilo para a descrição do produto (exibida na interface, mas não enviada no WhatsApp) */
+    /* Estilo para a descrição do produto (exibida na interface) */
     .descricao-produto {
       width: 100%;
       margin-bottom: 10px;
       color: #ccc;
       font-size: 0.9em;
       font-style: italic;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
     }
   </style>
   <script>
@@ -168,43 +170,27 @@
           // Divide a linha em colunas (utilize um parser CSV se necessário)
           const colunas = linha.split(",").map(coluna => coluna.trim());
 
-          /* Estrutura da planilha (9 colunas):
+          /* 
+             Estrutura da planilha:
              0: Produto
              1: Preço
              2: Descrição
-             3: Adicional 1
-             4: Preço Adicional 1
-             5: Adicional 2
-             6: Preço Adicional 2
-             7: Adicional 3
-             8: Preço Adicional 3
+             A partir da coluna 3: adicionais lidos em pares (nome e preço)
           */
           const nome = colunas[0];
           const preco = parseFloat(colunas[1].replace(",", ".")) || 0;
           const descricao = colunas[2];
 
-          // Cria um array para os adicionais deste produto
           const adicionais = [];
-          if (colunas[3] && colunas[4]) {
-            adicionais.push({
-              nome: colunas[3],
-              preco: parseFloat(colunas[4].replace(",", ".")) || 0
-            });
-          }
-          if (colunas[5] && colunas[6]) {
-            adicionais.push({
-              nome: colunas[5],
-              preco: parseFloat(colunas[6].replace(",", ".")) || 0
-            });
-          }
-          if (colunas[7] && colunas[8]) {
-            adicionais.push({
-              nome: colunas[7],
-              preco: parseFloat(colunas[8].replace(",", ".")) || 0
-            });
+          for (let i = 3; i < colunas.length; i += 2) {
+            if (colunas[i] && colunas[i+1]) {
+              adicionais.push({
+                nome: colunas[i],
+                preco: parseFloat(colunas[i+1].replace(",", ".")) || 0
+              });
+            }
           }
 
-          // Armazena os dados do produto, incluindo descrição e adicionais
           produtos[nome] = { preco, descricao, adicionais };
         });
         console.log("Produtos carregados:", produtos);
@@ -305,13 +291,12 @@
     }
 
     // Atualiza o preço total do item.
-    // O cálculo agora será: (preço base * quantidade) + soma dos adicionais (apenas uma vez, não multiplicado pela quantidade)
+    // Cálculo: (Preço base * Quantidade) + Soma dos adicionais (somados apenas uma vez)
     function atualizarPrecoTotal(element) {
       const itemRow = element.closest('.item-row');
       const produtoSelect = itemRow.querySelector('select:first-child');
       const quantidadeSelect = itemRow.querySelector('select:nth-of-type(2)');
       const produto = produtoSelect ? produtoSelect.value : "";
-      // Se quantidade não for válida, usamos 1 como padrão
       const quantidade = quantidadeSelect ? (parseInt(quantidadeSelect.value) || 1) : 1;
       if (produto) {
         let basePrice = Number(produtos[produto].preco) || 0;
@@ -322,7 +307,7 @@
             extrasSum += Number(cb.getAttribute('data-extra-preco')) || 0;
           }
         });
-        // O total do item será: (preço base * quantidade) + adicionais (soma única)
+        // Cálculo: (Preço base * Quantidade) + Soma dos adicionais (soma única, não multiplicada pela quantidade)
         const totalPrice = (basePrice * quantidade) + extrasSum;
         itemRow.querySelector('input[readonly]').value = totalPrice.toFixed(2);
         calcularTotal();
