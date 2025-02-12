@@ -1,4 +1,60 @@
-<!DOCTYPE html>
+zarStatus, 1000);
+
+    window.addEventListener('DOMContentLoaded', function() {
+      carregarProdutosDaPlanilha();
+      atualizarStatus();
+    });
+  </script>
+</head>
+<body>
+  <div class="status-container" id="status-container">
+    <!-- Mensagem de status -->
+  </div>
+  <form onsubmit="event.preventDefault(); enviarPedido();">
+    <h1>PEDIDO</h1>
+    <label for="nome">Nome do Cliente:</label>
+    <input type="text" id="nome" name="nome" placeholder="Digite seu nome" required>
+    <label for="endereco">Endereço de Entrega:</label>
+    <input type="text" id="endereco" name="endereco" placeholder="Cidade, Bairro, Rua, Número" required>
+    <label for="complemento">Complemento (opcional):</label>
+    <input type="text" id="complemento" name="complemento" placeholder="Ex: Apto. 101">
+    <label for="ponto-referencia">Ponto de Referência:</label>
+    <input type="text" id="ponto-referencia" name="ponto-referencia" placeholder="Ex: Em frente a padaria, ao lado do banco" required>
+    <label>Itens do Pedido:</label>
+    <div id="itens-container" class="itens-container">
+      <!-- Itens adicionados dinamicamente -->
+    </div>
+    <div class="add-item">
+      <button type="button" onclick="adicionarItem()">Adicionar Item</button>
+    </div>
+    <label for="taxa">Taxa de Entrega (R$):</label>
+    <input type="number" id="taxa" name="taxa" value="4.00" class="taxa-fixa" readonly>
+    <label for="pagamento">Forma de Pagamento:</label>
+    <select id="pagamento" name="pagamento" required>
+      <option value="Dinheiro">Dinheiro</option>
+      <option value="Cartão de Crédito">Cartão de Crédito</option>
+      <option value="Cartão de Débito">Cartão de Débito</option>
+      <option value="PIX">PIX</option>
+    </select>
+    <label for="observacoes">Observações:</label>
+    <textarea id="observacoes" name="observacoes" placeholder="Digite suas observações" rows="4"></textarea>
+    <label>Opção:</label>
+    <div id="opcao-entrega">
+      <button type="button" id="btn-entrega" onclick="selecionarOpcao('entrega')" class="selected">Entrega</button>
+      <button type="button" id="btn-retirada" onclick="selecionarOpcao('retirada')">Retirada</button>
+    </div>
+    <label for="total">Total:</label>
+    <input type="number" id="total" name="total" placeholder="Total do Pedido" readonly>
+    <button type="submit">Enviar Pedido</button>
+  </form>
+  <script>
+    window.addEventListener('DOMContentLoaded', function() {
+      carregarProdutosDaPlanilha();
+      atualizarStatus();
+    });
+  </script>
+</body>
+</h<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
