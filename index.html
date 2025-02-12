@@ -159,8 +159,10 @@
   <script>
     // Opção de entrega ou retirada (padrão: entrega)
     let opcaoEntrega = "entrega";
+
     // Objeto para armazenar os produtos carregados da planilha
     const produtos = {};
+
     // Carrega os produtos do CSV
     async function carregarProdutosDaPlanilha() {
       const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGudIAhY04w2oPsRfM4bckCWCqPn7triE4M2f4BsdLcSqYeVwJJMv8IEwgCh33l29fH5JVuoa9pllZ/pub?output=csv";
@@ -169,8 +171,10 @@
         const csvText = await resposta.text();
         const linhas = csvText.split("\n").map(linha => linha.trim()).filter(linha => linha);
         linhas.shift(); // Remove cabeçalho
+
         // Limpa produtos
         for (const key in produtos) { delete produtos[key]; }
+
         linhas.forEach(linha => {
           // Divide usando vírgula como delimitador
           const colunas = linha.split(",").map(coluna => coluna.trim());
@@ -200,6 +204,7 @@
         console.error("Erro ao carregar os produtos:", error);
       }
     }
+
     // Atualiza os selects de produto
     function atualizarSelectProdutos() {
       const selects = document.querySelectorAll("#itens-container .item-row select:first-child");
@@ -215,6 +220,7 @@
         }
       });
     }
+
     // Seleciona a opção de entrega ou retirada
     function selecionarOpcao(opcao) {
       opcaoEntrega = opcao;
@@ -227,6 +233,7 @@
       }
       calcularTotal();
     }
+
     // Adiciona um novo item
     function adicionarItem() {
       const itensContainer = document.getElementById("itens-container");
@@ -252,6 +259,7 @@
       itensContainer.appendChild(novoItem);
       atualizarSelectProdutos();
     }
+
     // Ao selecionar um produto, renderiza a descrição e os adicionais
     function produtoSelecionado(selectElement) {
       const itemRow = selectElement.closest('.item-row');
@@ -260,11 +268,13 @@
       renderExtrasForRow(itemRow, produto);
       atualizarPrecoTotal(selectElement);
     }
+
     // Exibe a descrição do produto
     function renderDescricaoForRow(itemRow, produto) {
       const descricaoContainer = itemRow.querySelector('.descricao-produto');
       descricaoContainer.innerText = (produto && produtos[produto] && produtos[produto].descricao) ? produtos[produto].descricao : "";
     }
+
     // Renderiza os adicionais: cada extra é exibido com um select para quantidade (0 a 10)
     function renderExtrasForRow(itemRow, produto) {
       const extrasContainer = itemRow.querySelector('.extras-container');
@@ -283,6 +293,7 @@
         extrasContainer.innerHTML = "";
       }
     }
+
     // Atualiza o preço total do item:
     // Total = (Preço base * Quantidade do produto) + (para cada extra: Preço extra * Quantidade selecionada)
     function atualizarPrecoTotal(element) {
@@ -308,6 +319,7 @@
         calcularTotal();
       }
     }
+
     // Calcula o total do pedido (soma de todos os itens + taxa de entrega, se houver)
     function calcularTotal() {
       const itensContainer = document.getElementById("itens-container").children;
@@ -321,6 +333,7 @@
       const totalPedido = total + taxaEntrega;
       document.getElementById("total").value = totalPedido.toFixed(2);
     }
+
     // Envia o pedido via WhatsApp (a descrição NÃO é incluída)
     function enviarPedido() {
       const nome = document.getElementById("nome").value;
@@ -386,12 +399,14 @@
         alert("Por favor, adicione pelo menos um item ao seu pedido.");
       }
     }
+
     // Remove um item do pedido
     function removerItem(button) {
       const itemRow = button.closest('.item-row');
       itemRow.remove();
       calcularTotal();
     }
+
     // Atualiza a mensagem de status (aberto/fechado)
     function atualizarStatus() {
       const statusContainer = document.getElementById("status-container");
@@ -410,6 +425,7 @@
         statusContainer.classList.remove("aberto");
       }
     }
+
     setInterval(atualizarStatus, 1000);
     window.addEventListener('DOMContentLoaded', function() {
       carregarProdutosDaPlanilha();
@@ -466,4 +482,3 @@
   </script>
 </body>
 </html>
-
