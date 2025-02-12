@@ -125,7 +125,7 @@
     #opcao-entrega button.selected {
       background-color: #001e56;
     }
-    /* Estilo para a área de adicionais dentro do item */
+    /* Área dos adicionais */
     .extras-container {
       width: 100%;
       margin-top: 10px;
@@ -134,7 +134,18 @@
       margin: 0 0 5px 0;
       font-weight: bold;
     }
-    /* Estilo para a descrição do produto (exibida na interface) */
+    /* Cada extra é exibido com um select para quantidade (de 0 a 10) */
+    .extra-item {
+      display: inline-block;
+      margin-right: 10px;
+      font-size: 0.9em;
+    }
+    .extra-item select {
+      padding: 2px 6px;
+      font-size: 0.9em;
+      margin-left: 4px;
+    }
+    /* Descrição do produto */
     .descricao-produto {
       width: 100%;
       margin-bottom: 10px;
@@ -148,29 +159,30 @@
   <script>
     // Opção de entrega ou retirada (padrão: entrega)
     let opcaoEntrega = "entrega";
+
     // Objeto para armazenar os produtos carregados da planilha
     const produtos = {};
-    // Função para carregar os produtos (incluindo descrição e adicionais) da planilha do Google Sheets (CSV)
+
+    // Carrega os produtos do CSV
     async function carregarProdutosDaPlanilha() {
       const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGudIAhY04w2oPsRfM4bckCWCqPn7triE4M2f4BsdLcSqYeVwJJMv8IEwgCh33l29fH5JVuoa9pllZ/pub?output=csv";
       try {
         const resposta = await fetch(url);
         const csvText = await resposta.text();
         const linhas = csvText.split("\n").map(linha => linha.trim()).filter(linha => linha);
-        linhas.shift(); // Remove o cabeçalho
-        // Limpa o objeto de produtos (caso já tenha dados)
-        for (const key in produtos) {
-          delete produtos[key];
-        }
+        linhas.shift(); // Remove cabeçalho
+
+        // Limpa produtos
+        for (const key in produtos) { delete produtos[key]; }
+
         linhas.forEach(linha => {
-          // Divide a linha em colunas (utilize um parser CSV se necessário)
+          // Divide usando vírgula como delimitador
           const colunas = linha.split(",").map(coluna => coluna.trim());
-          /*
-             Estrutura da planilha:
+          /* Estrutura da planilha:
              0: Produto
              1: Preço
              2: Descrição
-             A partir da coluna 3: adicionais lidos em pares (nome e preço)
+             A partir da coluna 3: adicionais (em pares: nome e preço)
           */
           const nome = colunas[0];
           const preco = parseFloat(colunas[1].replace(",", ".")) || 0;
@@ -192,7 +204,8 @@
         console.error("Erro ao carregar os produtos:", error);
       }
     }
-    // Atualiza os selects já existentes com os produtos carregados
+
+    // Atualiza os selects de produto
     function atualizarSelectProdutos() {
       const selects = document.querySelectorAll("#itens-container .item-row select:first-child");
       selects.forEach(select => {
@@ -207,6 +220,7 @@
         }
       });
     }
+
     // Seleciona a opção de entrega ou retirada
     function selecionarOpcao(opcao) {
       opcaoEntrega = opcao;
@@ -219,7 +233,8 @@
       }
       calcularTotal();
     }
-    // Adiciona um novo item no pedido
+
+    // Adiciona um novo item
     function adicionarItem() {
       const itensContainer = document.getElementById("itens-container");
       const novoItem = document.createElement("div");
@@ -236,14 +251,16 @@
         </select>
         <input type="number" placeholder="Preço Total (R$)" step="0.01" readonly>
         <button onclick="removerItem(this)">Remover</button>
-        <!-- Container para a descrição do produto (exibida na interface, mas NÃO incluída no WhatsApp) -->
+        <!-- Exibe a descrição do produto -->
         <div class="descricao-produto"></div>
+        <!-- Container para os adicionais -->
         <div class="extras-container"></div>
       `;
       itensContainer.appendChild(novoItem);
       atualizarSelectProdutos();
     }
-    // Função chamada ao selecionar um produto (para renderizar a descrição e os adicionais, se houver)
+
+    // Ao selecionar um produto, renderiza a descrição e os adicionais
     function produtoSelecionado(selectElement) {
       const itemRow = selectElement.closest('.item-row');
       const produto = selectElement.value;
@@ -251,33 +268,34 @@
       renderExtrasForRow(itemRow, produto);
       atualizarPrecoTotal(selectElement);
     }
-    // Renderiza a descrição do produto na área designada (apenas exibida na interface)
+
+    // Exibe a descrição do produto
     function renderDescricaoForRow(itemRow, produto) {
       const descricaoContainer = itemRow.querySelector('.descricao-produto');
-      if (produto && produtos[produto] && produtos[produto].descricao) {
-        descricaoContainer.innerText = produtos[produto].descricao;
-      } else {
-        descricaoContainer.innerText = "";
-      }
+      descricaoContainer.innerText = (produto && produtos[produto] && produtos[produto].descricao) ? produtos[produto].descricao : "";
     }
-    // Renderiza os adicionais para o item, caso o produto possua adicionais
+
+    // Renderiza os adicionais: cada extra é exibido com um select para quantidade (0 a 10)
     function renderExtrasForRow(itemRow, produto) {
       const extrasContainer = itemRow.querySelector('.extras-container');
       if (produto && produtos[produto] && produtos[produto].adicionais.length > 0) {
         let html = `<p>Adicionais:</p>`;
         produtos[produto].adicionais.forEach(extra => {
-          html += `<label style="margin-right:10px;">
-                    <input type="checkbox" data-extra-preco="${extra.preco}" data-extra-nome="${extra.nome}" onchange="atualizarPrecoTotal(this)">
-                    ${extra.nome} (R$ ${extra.preco.toFixed(2)})
-                   </label>`;
+          html += `<div class="extra-item" data-extra-price="${extra.preco}">
+                    <span class="extra-name">${extra.nome} (R$ ${extra.preco.toFixed(2)})</span>
+                    <select class="extra-select" onchange="atualizarPrecoTotal(this)">
+                      ${[...Array(11)].map((_, i) => `<option value="${i}">${i}</option>`).join('')}
+                    </select>
+                   </div>`;
         });
         extrasContainer.innerHTML = html;
       } else {
         extrasContainer.innerHTML = "";
       }
     }
-    // Atualiza o preço total do item.
-    // Cálculo: (Preço base * Quantidade) + Soma dos adicionais (somados apenas uma vez)
+
+    // Atualiza o preço total do item:
+    // Total = (Preço base * Quantidade do produto) + (para cada extra: Preço extra * Quantidade selecionada)
     function atualizarPrecoTotal(element) {
       const itemRow = element.closest('.item-row');
       const produtoSelect = itemRow.querySelector('select:first-child');
@@ -287,13 +305,12 @@
       if (produto) {
         let basePrice = Number(produtos[produto].preco) || 0;
         let extrasSum = 0;
-        const checkboxes = itemRow.querySelectorAll('.extras-container input[type="checkbox"]');
-        checkboxes.forEach(cb => {
-          if (cb.checked) {
-            extrasSum += Number(cb.getAttribute('data-extra-preco')) || 0;
-          }
+        const extraItems = itemRow.querySelectorAll('.extras-container .extra-item');
+        extraItems.forEach(item => {
+          let price = Number(item.getAttribute('data-extra-price')) || 0;
+          let extraQty = parseInt(item.querySelector('.extra-select').value) || 0;
+          extrasSum += price * extraQty;
         });
-        // Cálculo: (Preço base * Quantidade) + Soma dos adicionais (soma única, não multiplicada pela quantidade)
         const totalPrice = (basePrice * quantidade) + extrasSum;
         itemRow.querySelector('input[readonly]').value = totalPrice.toFixed(2);
         calcularTotal();
@@ -302,7 +319,8 @@
         calcularTotal();
       }
     }
-    // Calcula o total do pedido somando os totais de cada item e a taxa de entrega (se aplicável)
+
+    // Calcula o total do pedido (soma de todos os itens + taxa de entrega, se houver)
     function calcularTotal() {
       const itensContainer = document.getElementById("itens-container").children;
       let total = 0;
@@ -315,7 +333,8 @@
       const totalPedido = total + taxaEntrega;
       document.getElementById("total").value = totalPedido.toFixed(2);
     }
-    // Envia o pedido via WhatsApp com a mensagem formatada (a descrição NÃO é incluída)
+
+    // Envia o pedido via WhatsApp (a descrição NÃO é incluída)
     function enviarPedido() {
       const nome = document.getElementById("nome").value;
       const endereco = document.getElementById("endereco").value;
@@ -337,16 +356,16 @@
         }
         const quantidade = itemRow.querySelector('select:nth-of-type(2)').value;
         const precoTotal = itemRow.querySelector('input[readonly]').value;
-        // Monta a linha principal do item (a descrição NÃO é incluída)
         let itemText = `${produtoSelecionado} x${quantidade} - R$ ${precoTotal}\n`;
-        // Adiciona os adicionais selecionados
-        const extrasContainer = itemRow.querySelector('.extras-container');
-        const checkboxes = extrasContainer.querySelectorAll('input[type="checkbox"]');
-        checkboxes.forEach(cb => {
-          if (cb.checked) {
-            const nomeExtra = cb.getAttribute('data-extra-nome');
-            const precoExtra = Number(cb.getAttribute('data-extra-preco')).toFixed(2);
-            itemText += `   + ${nomeExtra} (R$ ${precoExtra})\n`;
+        // Para cada extra, mostra a quantidade escolhida e o valor total do extra (preço unitário × quantidade)
+        const extraItems = itemRow.querySelectorAll('.extras-container .extra-item');
+        extraItems.forEach(item => {
+          let extraQty = parseInt(item.querySelector('.extra-select').value) || 0;
+          if (extraQty > 0) {
+            const extraName = item.querySelector('.extra-name').innerText;
+            let extraUnitPrice = Number(item.getAttribute('data-extra-price')) || 0;
+            let extraTotal = extraUnitPrice * extraQty;
+            itemText += `   + ${extraName} x${extraQty} - R$ ${extraTotal.toFixed(2)}\n`;
           }
         });
         itens += itemText;
@@ -380,12 +399,14 @@
         alert("Por favor, adicione pelo menos um item ao seu pedido.");
       }
     }
+
     // Remove um item do pedido
     function removerItem(button) {
       const itemRow = button.closest('.item-row');
       itemRow.remove();
       calcularTotal();
     }
+
     // Atualiza a mensagem de status (aberto/fechado)
     function atualizarStatus() {
       const statusContainer = document.getElementById("status-container");
@@ -404,6 +425,7 @@
         statusContainer.classList.remove("aberto");
       }
     }
+
     setInterval(atualizarStatus, 1000);
     window.addEventListener('DOMContentLoaded', function() {
       carregarProdutosDaPlanilha();
