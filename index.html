@@ -1,60 +1,4 @@
-zarStatus, 1000);
-
-    window.addEventListener('DOMContentLoaded', function() {
-      carregarProdutosDaPlanilha();
-      atualizarStatus();
-    });
-  </script>
-</head>
-<body>
-  <div class="status-container" id="status-container">
-    <!-- Mensagem de status -->
-  </div>
-  <form onsubmit="event.preventDefault(); enviarPedido();">
-    <h1>PEDIDO</h1>
-    <label for="nome">Nome do Cliente:</label>
-    <input type="text" id="nome" name="nome" placeholder="Digite seu nome" required>
-    <label for="endereco">Endereço de Entrega:</label>
-    <input type="text" id="endereco" name="endereco" placeholder="Cidade, Bairro, Rua, Número" required>
-    <label for="complemento">Complemento (opcional):</label>
-    <input type="text" id="complemento" name="complemento" placeholder="Ex: Apto. 101">
-    <label for="ponto-referencia">Ponto de Referência:</label>
-    <input type="text" id="ponto-referencia" name="ponto-referencia" placeholder="Ex: Em frente a padaria, ao lado do banco" required>
-    <label>Itens do Pedido:</label>
-    <div id="itens-container" class="itens-container">
-      <!-- Itens adicionados dinamicamente -->
-    </div>
-    <div class="add-item">
-      <button type="button" onclick="adicionarItem()">Adicionar Item</button>
-    </div>
-    <label for="taxa">Taxa de Entrega (R$):</label>
-    <input type="number" id="taxa" name="taxa" value="4.00" class="taxa-fixa" readonly>
-    <label for="pagamento">Forma de Pagamento:</label>
-    <select id="pagamento" name="pagamento" required>
-      <option value="Dinheiro">Dinheiro</option>
-      <option value="Cartão de Crédito">Cartão de Crédito</option>
-      <option value="Cartão de Débito">Cartão de Débito</option>
-      <option value="PIX">PIX</option>
-    </select>
-    <label for="observacoes">Observações:</label>
-    <textarea id="observacoes" name="observacoes" placeholder="Digite suas observações" rows="4"></textarea>
-    <label>Opção:</label>
-    <div id="opcao-entrega">
-      <button type="button" id="btn-entrega" onclick="selecionarOpcao('entrega')" class="selected">Entrega</button>
-      <button type="button" id="btn-retirada" onclick="selecionarOpcao('retirada')">Retirada</button>
-    </div>
-    <label for="total">Total:</label>
-    <input type="number" id="total" name="total" placeholder="Total do Pedido" readonly>
-    <button type="submit">Enviar Pedido</button>
-  </form>
-  <script>
-    window.addEventListener('DOMContentLoaded', function() {
-      carregarProdutosDaPlanilha();
-      atualizarStatus();
-    });
-  </script>
-</body>
-</h<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -204,10 +148,8 @@ zarStatus, 1000);
   <script>
     // Opção de entrega ou retirada (padrão: entrega)
     let opcaoEntrega = "entrega";
-
     // Objeto para armazenar os produtos carregados da planilha
     const produtos = {};
-
     // Função para carregar os produtos (incluindo descrição e adicionais) da planilha do Google Sheets (CSV)
     async function carregarProdutosDaPlanilha() {
       const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGudIAhY04w2oPsRfM4bckCWCqPn7triE4M2f4BsdLcSqYeVwJJMv8IEwgCh33l29fH5JVuoa9pllZ/pub?output=csv";
@@ -216,17 +158,14 @@ zarStatus, 1000);
         const csvText = await resposta.text();
         const linhas = csvText.split("\n").map(linha => linha.trim()).filter(linha => linha);
         linhas.shift(); // Remove o cabeçalho
-
         // Limpa o objeto de produtos (caso já tenha dados)
         for (const key in produtos) {
           delete produtos[key];
         }
-
         linhas.forEach(linha => {
           // Divide a linha em colunas (utilize um parser CSV se necessário)
           const colunas = linha.split(",").map(coluna => coluna.trim());
-
-          /* 
+          /*
              Estrutura da planilha:
              0: Produto
              1: Preço
@@ -236,7 +175,6 @@ zarStatus, 1000);
           const nome = colunas[0];
           const preco = parseFloat(colunas[1].replace(",", ".")) || 0;
           const descricao = colunas[2];
-
           const adicionais = [];
           for (let i = 3; i < colunas.length; i += 2) {
             if (colunas[i] && colunas[i+1]) {
@@ -246,7 +184,6 @@ zarStatus, 1000);
               });
             }
           }
-
           produtos[nome] = { preco, descricao, adicionais };
         });
         console.log("Produtos carregados:", produtos);
@@ -255,7 +192,6 @@ zarStatus, 1000);
         console.error("Erro ao carregar os produtos:", error);
       }
     }
-
     // Atualiza os selects já existentes com os produtos carregados
     function atualizarSelectProdutos() {
       const selects = document.querySelectorAll("#itens-container .item-row select:first-child");
@@ -271,7 +207,6 @@ zarStatus, 1000);
         }
       });
     }
-
     // Seleciona a opção de entrega ou retirada
     function selecionarOpcao(opcao) {
       opcaoEntrega = opcao;
@@ -284,7 +219,6 @@ zarStatus, 1000);
       }
       calcularTotal();
     }
-
     // Adiciona um novo item no pedido
     function adicionarItem() {
       const itensContainer = document.getElementById("itens-container");
@@ -309,7 +243,6 @@ zarStatus, 1000);
       itensContainer.appendChild(novoItem);
       atualizarSelectProdutos();
     }
-
     // Função chamada ao selecionar um produto (para renderizar a descrição e os adicionais, se houver)
     function produtoSelecionado(selectElement) {
       const itemRow = selectElement.closest('.item-row');
@@ -318,7 +251,6 @@ zarStatus, 1000);
       renderExtrasForRow(itemRow, produto);
       atualizarPrecoTotal(selectElement);
     }
-
     // Renderiza a descrição do produto na área designada (apenas exibida na interface)
     function renderDescricaoForRow(itemRow, produto) {
       const descricaoContainer = itemRow.querySelector('.descricao-produto');
@@ -328,7 +260,6 @@ zarStatus, 1000);
         descricaoContainer.innerText = "";
       }
     }
-
     // Renderiza os adicionais para o item, caso o produto possua adicionais
     function renderExtrasForRow(itemRow, produto) {
       const extrasContainer = itemRow.querySelector('.extras-container');
@@ -345,7 +276,6 @@ zarStatus, 1000);
         extrasContainer.innerHTML = "";
       }
     }
-
     // Atualiza o preço total do item.
     // Cálculo: (Preço base * Quantidade) + Soma dos adicionais (somados apenas uma vez)
     function atualizarPrecoTotal(element) {
@@ -372,7 +302,6 @@ zarStatus, 1000);
         calcularTotal();
       }
     }
-
     // Calcula o total do pedido somando os totais de cada item e a taxa de entrega (se aplicável)
     function calcularTotal() {
       const itensContainer = document.getElementById("itens-container").children;
@@ -386,7 +315,6 @@ zarStatus, 1000);
       const totalPedido = total + taxaEntrega;
       document.getElementById("total").value = totalPedido.toFixed(2);
     }
-
     // Envia o pedido via WhatsApp com a mensagem formatada (a descrição NÃO é incluída)
     function enviarPedido() {
       const nome = document.getElementById("nome").value;
@@ -400,7 +328,6 @@ zarStatus, 1000);
       const itensContainer = document.getElementById("itens-container").children;
       let itens = "";
       let temProdutoVazio = false;
-
       for (let i = 0; i < itensContainer.length; i++) {
         const itemRow = itensContainer[i];
         const produtoSelecionado = itemRow.querySelector('select:first-child').value;
@@ -424,12 +351,10 @@ zarStatus, 1000);
         });
         itens += itemText;
       }
-
       if (temProdutoVazio) {
         alert("Por favor, selecione um produto ou remova os itens vazios do seu pedido.");
         return;
       }
-
       let mensagem = `*PEDIDO*\n\n📋 *Dados do Cliente:*\n- Nome: ${nome}\n- Endereço: ${endereco}\n`;
       if (complemento) mensagem += `- Complemento: ${complemento}\n`;
       if (pontoReferencia) {
@@ -447,23 +372,20 @@ zarStatus, 1000);
         mensagem += `Dinheiro\n`;
       }
       mensagem += `🚚 *Taxa de Entrega:* R$ ${taxa}\n🔴 *Total do Pedido:* R$ ${total}\n\n*Modo:* ${opcaoEntrega === "entrega" ? "Entrega" : "Retirada"}\n\n*Observações:* ${observacoes}`;
-
       const telefone = "98981729088";
       if (parseFloat(total) > 0) {
-        const url = `https://wa.me/55${telefone}?text=${encodeURIComponent(mensagem)}`;
+        const url = `whatsapp://send?phone=+55${telefone}&text=${encodeURIComponent(mensagem)}`;
         window.open(url, "_blank");
       } else {
         alert("Por favor, adicione pelo menos um item ao seu pedido.");
       }
     }
-
     // Remove um item do pedido
     function removerItem(button) {
       const itemRow = button.closest('.item-row');
       itemRow.remove();
       calcularTotal();
     }
-
     // Atualiza a mensagem de status (aberto/fechado)
     function atualizarStatus() {
       const statusContainer = document.getElementById("status-container");
@@ -482,9 +404,7 @@ zarStatus, 1000);
         statusContainer.classList.remove("aberto");
       }
     }
-
     setInterval(atualizarStatus, 1000);
-
     window.addEventListener('DOMContentLoaded', function() {
       carregarProdutosDaPlanilha();
       atualizarStatus();
